@@ -1,0 +1,10 @@
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  data:
+    mongodb:
+      database: Assembly
+mongock:
+  change-logs-scan-package:
+    - br.com.assembly.dbchangelogs
