@@ -8,3 +8,7 @@ spring:
 mongock:
   change-logs-scan-package:
     - br.com.assembly.dbchangelogs
+
+server:
+  servlet:
+    context-path: /api
