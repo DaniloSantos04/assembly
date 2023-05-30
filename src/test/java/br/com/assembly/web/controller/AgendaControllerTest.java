@@ -1,7 +1,9 @@
 package br.com.assembly.web.controller;
 
 import br.com.assembly.mock.AgendaMock;
+import br.com.assembly.mock.VoteMock;
 import br.com.assembly.service.AgendaService;
+import br.com.assembly.service.VoteService;
 import br.com.assembly.web.dto.request.agenda.AgendaRequest;
 import br.com.assembly.web.dto.request.agenda.AgendaUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,11 +39,14 @@ public class AgendaControllerTest {
 
     @MockBean
     private AgendaService agendaService;
+    @MockBean
+    private VoteService voteService;
 
     private static final String URL_PATCH = "/v1/agenda";
     private static final String URL_PATCH_ID = "/v1/agenda/id/{id}";
 
     private static final String MESSAGE_AGENDA_NOT_FOUND = "Agenda not found for the id: ";
+    private static final String MESSAGE_VOTE_NOT_FOUND = "The voting result was not found for the id: ";
 
     @Test
     public void createdAgendaSucess() throws Exception {
@@ -281,6 +286,33 @@ public class AgendaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
+    }
+
+    @Test
+    public void findResultAgendaSuccess() throws Exception {
+        var id = 1L;
+        var countVotesResponse = VoteMock.createdCountVotesResponse();
+
+        when(voteService.countVotes(id)).thenReturn(countVotesResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH.concat("/{id}/result"),id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.idAgenda").value(id))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesSim").value(countVotesResponse.getTotalVotesSim()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesNao").value(countVotesResponse.getTotalVotesNao()));
+    }
+
+    @Test
+    public void findResultAgendaNotFound() throws Exception {
+        var id = 1L;
+
+        when(voteService.countVotes(id)).thenReturn(null);
+
+        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH.concat("/{id}/result"),id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_VOTE_NOT_FOUND.concat(String.valueOf(id))));
     }
 
 

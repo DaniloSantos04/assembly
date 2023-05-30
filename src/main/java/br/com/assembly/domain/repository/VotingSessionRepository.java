@@ -8,4 +8,6 @@ import java.util.List;
 public interface VotingSessionRepository extends MongoRepository<VotingSession, Long> {
     VotingSession findFirstByOrderByIdDesc();
     List<VotingSession> findAllByActive(boolean active);
+
+    VotingSession findByIdAgenda(Long idAgenda);
 }
