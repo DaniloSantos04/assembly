@@ -1,6 +1,7 @@
 package br.com.assembly.web.controller;
 
 import br.com.assembly.service.AgendaService;
+import br.com.assembly.service.VoteService;
 import br.com.assembly.web.dto.request.agenda.AgendaRequest;
 import br.com.assembly.web.dto.request.agenda.AgendaUpdateRequest;
 import lombok.AllArgsConstructor;
@@ -19,8 +20,12 @@ import javax.validation.constraints.NotNull;
 public class AgendaController {
 
     private static final String MESSAGE_AGENDA_NOT_FOUND = "Agenda not found for the id: ";
+    private static final String MESSAGE_VOTE_NOT_FOUND = "The voting result was not found for the id: ";
     @Autowired
     private AgendaService agendaService;
+
+    @Autowired
+    private VoteService voteService;
 
     @PostMapping()
     public ResponseEntity<?> createAgenda(@RequestBody @NotNull @Valid AgendaRequest agendaRequest) {
@@ -69,5 +74,15 @@ public class AgendaController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping("/{id}/result")
+    public ResponseEntity<?> findResultAgenda(@PathVariable("id") Long id) {
+        var response = voteService.countVotes(id);
+        if(response == null){
+            return new ResponseEntity<>(MESSAGE_VOTE_NOT_FOUND.concat(id.toString()), HttpStatus.NOT_FOUND);
+        }
+
+        return ResponseEntity.ok(response);
     }
 }

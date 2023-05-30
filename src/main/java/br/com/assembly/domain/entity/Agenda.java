@@ -1,7 +1,6 @@
 package br.com.assembly.domain.entity;
 
 import br.com.assembly.web.dto.request.agenda.AgendaRequest;
-import br.com.assembly.web.dto.request.agenda.AgendaUpdateRequest;
 import br.com.assembly.web.dto.response.AgendaResponse;
 import lombok.Builder;
 import lombok.Getter;

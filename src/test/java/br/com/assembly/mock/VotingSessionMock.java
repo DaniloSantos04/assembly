@@ -3,7 +3,6 @@ package br.com.assembly.mock;
 import br.com.assembly.domain.entity.VotingSession;
 import br.com.assembly.web.dto.request.votingsession.SessionUpdateRequest;
 import br.com.assembly.web.dto.request.votingsession.VotingSessionRequest;
-import br.com.assembly.web.dto.response.AgendaResponse;
 import br.com.assembly.web.dto.response.VotingSessionResponse;
 
 import java.time.LocalDateTime;
