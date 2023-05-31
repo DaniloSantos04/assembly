@@ -7,7 +7,7 @@ spring:
       database: Assembly
   rabbitmq:
     host: localhost
-    port: 15672
+    port: 5672
     username: guest
     password: guest
     virtual-host: /
@@ -16,7 +16,7 @@ spring:
         acknowledge-mode: manual
     template:
       queue: true
-      exchange: ""
+      exchange: assembly
       routing-key: votingResult
     consumer:
       queue-name: votingResult

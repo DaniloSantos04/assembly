@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AmqpConsumer {
 
-    @RabbitListener()
+    @RabbitListener(queues = "${spring.rabbitmq.consumer.queue-name}")
     public void receiveMessage(String mensagem) {
         System.out.println("Mensagem recebida: " + mensagem);
     }
