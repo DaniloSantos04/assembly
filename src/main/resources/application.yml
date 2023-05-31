@@ -5,6 +5,21 @@ spring:
   data:
     mongodb:
       database: Assembly
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: manual
+    template:
+      queue: true
+      exchange: assembly
+      routing-key: votingResult
+    consumer:
+      queue-name: votingResult
 mongock:
   change-logs-scan-package:
     - br.com.assembly.dbchangelogs
