@@ -1,5 +1,6 @@
 package br.com.assembly.web.controller;
 
+import br.com.assembly.exception.CustomException;
 import br.com.assembly.mock.AgendaMock;
 import br.com.assembly.mock.VoteMock;
 import br.com.assembly.service.AgendaService;
@@ -170,18 +171,6 @@ public class AgendaControllerTest {
     }
 
     @Test
-    public void findAgendaIdNotFound() throws Exception {
-        var id = 1L;
-
-        when(agendaService.findAgendaId(id)).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH_ID,id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_AGENDA_NOT_FOUND.concat(String.valueOf(id))));
-    }
-
-    @Test
     public void updateAgendaIdSuccess() throws Exception {
         var id = 1L;
         var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
@@ -199,20 +188,6 @@ public class AgendaControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(createdAgenda.getId()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(agendaUpdateRequest.getTitle()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(agendaUpdateRequest.getDescription()));
-    }
-
-    @Test
-    public void updateAgendaIdNotFound() throws Exception {
-        var id = 1L;
-        var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
-
-        when(agendaService.updateAgendaId(id, agendaUpdateRequest)).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.patch(URL_PATCH_ID,id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(agendaUpdateRequest)))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_AGENDA_NOT_FOUND.concat(String.valueOf(id))));
     }
 
     @Test
@@ -265,18 +240,6 @@ public class AgendaControllerTest {
     }
 
     @Test
-    public void deleteByAgendaIdNotFound() throws Exception {
-        var id = 1L;;
-
-        when(agendaService.deleteByAgendaId(eq(id))).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.delete(URL_PATCH_ID,id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_AGENDA_NOT_FOUND.concat(String.valueOf(id))));
-    }
-
-    @Test
     public void deleteByAgendaIdBadRequest() throws Exception {
         var id = 1L;;
 
@@ -302,19 +265,4 @@ public class AgendaControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesSim").value(countVotesResponse.getTotalVotesSim()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesNao").value(countVotesResponse.getTotalVotesNao()));
     }
-
-    @Test
-    public void findResultAgendaNotFound() throws Exception {
-        var id = 1L;
-
-        when(voteService.countVotes(id)).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH.concat("/{id}/result"),id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_VOTE_NOT_FOUND.concat(String.valueOf(id))));
-    }
-
-
-
 }

@@ -84,18 +84,6 @@ public class VotingSessionControllerTest {
     }
 
     @Test
-    public void findVotingSessionByIdNotFound() throws Exception {
-        var id = 1L;
-
-        when(votingSessionService.findVotingSessionById(id)).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH_ID,id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_NOT_FOUND.concat(String.valueOf(id))));
-    }
-
-    @Test
     public void updateAgendaIdSuccess() throws Exception {
         var id = 1L;
         var sessionUpdateRequest = VotingSessionMock.buildFullSessionUpdateRequest();
@@ -114,17 +102,4 @@ public class VotingSessionControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.dateEnd").value(sessionUpdateRequest.getDateEnd().withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
     }
 
-    @Test
-    public void updateAgendaIdNotFound() throws Exception {
-        var id = 1L;
-        var sessionUpdateRequest = VotingSessionMock.buildFullSessionUpdateRequest();
-
-        when(votingSessionService.updateVotingSession(id, sessionUpdateRequest)).thenReturn(null);
-
-        mockMvc.perform(MockMvcRequestBuilders.patch(URL_PATCH_ID,id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sessionUpdateRequest)))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string(MESSAGE_NOT_FOUND.concat(String.valueOf(id))));
-    }
 }

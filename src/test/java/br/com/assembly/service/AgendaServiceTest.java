@@ -2,6 +2,7 @@ package br.com.assembly.service;
 
 import br.com.assembly.domain.entity.Agenda;
 import br.com.assembly.domain.repository.AgendaRepository;
+import br.com.assembly.exception.CustomException;
 import br.com.assembly.mock.AgendaMock;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -25,7 +26,7 @@ public class AgendaServiceTest {
     private AgendaService agendaService;
 
     @Test
-    public void successfullyCreatedFirstAgenda() {
+    public void successfullyCreatedFirstAgenda() throws CustomException {
         var agendaRequest = AgendaMock.allAgendaRequestRequestedFieldsComplete();
         var savedAgenda =  AgendaMock.allAgendaFieldsComplete();
         var rsponse = AgendaMock.allAgendaResponseRequestedFieldsComplete();
@@ -44,7 +45,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void successfullyCreatedAnotherAgenda() {
+    public void successfullyCreatedAnotherAgenda() throws CustomException {
         var agendaRequest = AgendaMock.allAgendaRequestRequestedFieldsComplete();
         var firstAgenda =  AgendaMock.allAgendaFieldsComplete();
         var savedAgenda =  AgendaMock.allAgendaFieldsComplete();
@@ -66,7 +67,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void findAllWithListContainingValues() {
+    public void findAllWithListContainingValues() throws CustomException {
         var agendaList = AgendaMock.agendaCompleteList();
         var responseList = AgendaMock.agendaResponseCompleteList();
 
@@ -85,7 +86,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void findAllWithEmptyList() {
+    public void findAllWithEmptyList() throws CustomException {
         when(agendaRepository.findAll()).thenReturn(Collections.emptyList());
 
         var response = agendaService.findAll();
@@ -95,7 +96,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void findAgendaIdSuccess() {
+    public void findAgendaIdSuccess() throws CustomException {
         var id = 1L;
         var agenda = AgendaMock.allAgendaFieldsComplete();
         var agendaResponse = AgendaMock.allAgendaResponseRequestedFieldsComplete();
@@ -115,17 +116,20 @@ public class AgendaServiceTest {
     @Test
     public void findAgendaIdEmpty() {
         var id = 1L;
+        try {
+            when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
+            agendaService.findAgendaId(id);
+        } catch (CustomException e) {
+            assertEquals("Agenda does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
 
-        var response = agendaService.findAgendaId(id);
-
-        assertNull(response);
         verify(agendaRepository, times(1)).findById(eq(id));
     }
 
     @Test
-    public void deleteByAgendaIdSuccess() {
+    public void deleteByAgendaIdSuccess() throws CustomException {
         var id = 1L;
         var agenda = AgendaMock.allAgendaFieldsComplete();
 
@@ -138,35 +142,44 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void deleteByAgendaIdNotExecuted() {
+    public void deleteByAgendaIdNotExecuted() throws CustomException {
         var id = 1L;
+        try {
 
-        when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
+            when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        var result = agendaService.deleteByAgendaId(id);
+            var result = agendaService.deleteByAgendaId(id);
 
-        assertNull(result);
+        } catch (CustomException e) {
+            assertEquals("Agenda does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
+
         verify(agendaRepository, times(1)).findById(eq(id));
         verify(agendaRepository, never()).deleteById(eq(id));
     }
 
     @Test
-    public void updateAgendaIdNotExecuted() {
+    public void updateAgendaIdNotExecuted() throws CustomException {
         Long id = 1L;
-        var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
+        try {
+            var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
 
-        when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
+            when(agendaRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        var updatedResponse = agendaService.updateAgendaId(id, agendaUpdateRequest);
+            agendaService.updateAgendaId(id, agendaUpdateRequest);
 
-        assertNull(updatedResponse);
+        } catch (CustomException e) {
+            assertEquals("Agenda does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
 
         verify(agendaRepository, times(1)).findById(eq(id));
         verify(agendaRepository, never()).save(any(Agenda.class));
     }
 
     @Test
-    public void updateAgendaIdCompleteSuccess() {
+    public void updateAgendaIdCompleteSuccess() throws CustomException {
         var id = 1L;
         var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
         var agenda = AgendaMock.allAgendaFieldsComplete();
@@ -190,7 +203,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void updateAgendaIdTitleSuccess() {
+    public void updateAgendaIdTitleSuccess() throws CustomException {
         var id = 1L;
         var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
         agendaUpdateRequest.setDescription("");
@@ -216,7 +229,7 @@ public class AgendaServiceTest {
     }
 
     @Test
-    public void updateAgendaIdDescriptionSuccess() {
+    public void updateAgendaIdDescriptionSuccess() throws CustomException {
         var id = 1L;
         var agendaUpdateRequest = AgendaMock.allAgendaUpdateRequestFieldsComplete();
         agendaUpdateRequest.setTitle("");

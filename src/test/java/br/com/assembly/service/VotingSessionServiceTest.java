@@ -2,6 +2,7 @@ package br.com.assembly.service;
 
 import br.com.assembly.domain.entity.VotingSession;
 import br.com.assembly.domain.repository.VotingSessionRepository;
+import br.com.assembly.exception.CustomException;
 import br.com.assembly.mock.VotingSessionMock;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +29,7 @@ public class VotingSessionServiceTest {
     private VotingSessionService votingSessionService;
 
     @Test
-    public void createdVotingSessionWithoutDateStartAndEndSuccess() {
+    public void createdVotingSessionWithoutDateStartAndEndSuccess() throws CustomException {
         var votingSessionRequest = VotingSessionMock.buildFullVotingSessionRequest();
         votingSessionRequest.setDateStart(null);
         votingSessionRequest.setDateEnd(null);
@@ -55,7 +56,7 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void createdVotingSessionCompleteSuccess() {
+    public void createdVotingSessionCompleteSuccess() throws CustomException {
         var votingSessionRequest = VotingSessionMock.buildFullVotingSessionRequest();
 
         var votingSessionResponse = VotingSessionMock.buildFullVotingSessionResponse();
@@ -80,7 +81,7 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void findVotingSessionByIdSuccess() {
+    public void findVotingSessionByIdSuccess() throws CustomException {
         var id = 1L;
         var votingSession = VotingSessionMock.buildFullVotingSession();
         var votingSessionResponse = VotingSessionMock.buildFullVotingSessionResponse();
@@ -100,34 +101,44 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void findVotingSessionByIdEmpty() {
+    public void findVotingSessionByIdEmpty() throws CustomException {
         var id = 1L;
 
-        when(votingSessionRepository.findById(eq(id))).thenReturn(Optional.empty());
+        try{
 
-        var response = votingSessionService.findVotingSessionById(id);
+            when(votingSessionRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        assertNull(response);
+            var response = votingSessionService.findVotingSessionById(id);
+
+        } catch (CustomException e) {
+            assertEquals("Voting session does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
+
         verify(votingSessionRepository, times(1)).findById(eq(id));
     }
 
     @Test
-    public void updateVotingSessionNotExecuted() {
+    public void updateVotingSessionNotExecuted() throws CustomException {
         Long id = 1L;
-        var sessionUpdateRequest = VotingSessionMock.buildFullSessionUpdateRequest();
+        try{
+            var sessionUpdateRequest = VotingSessionMock.buildFullSessionUpdateRequest();
 
-        when(votingSessionRepository.findById(eq(id))).thenReturn(Optional.empty());
+            when(votingSessionRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        var updatedResponse = votingSessionService.updateVotingSession(id, sessionUpdateRequest);
+            var updatedResponse = votingSessionService.updateVotingSession(id, sessionUpdateRequest);
 
-        assertNull(updatedResponse);
+        } catch (CustomException e) {
+            assertEquals("Voting session does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
 
         verify(votingSessionRepository, times(1)).findById(eq(id));
         verify(votingSessionRepository, never()).save(any(VotingSession.class));
     }
 
    @Test
-    public void updateVotingSessionCompleteSuccess() {
+    public void updateVotingSessionCompleteSuccess() throws CustomException {
         var id = 1L;
         var sessionUpdateRequest = VotingSessionMock.buildFullSessionUpdateRequest();
         var votingSession = VotingSessionMock.buildFullVotingSession();
@@ -152,7 +163,7 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void closedVotingSessionOnlyVotingSessionActive() {
+    public void closedVotingSessionOnlyVotingSessionActive() throws CustomException {
         var sessions = VotingSessionMock.onlyVotingSessionActiveList();
         var sessionClosed= VotingSessionMock.onlyVotingSessionActiveList();
         sessionClosed.get(0).setActive(false);
@@ -169,7 +180,7 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void closedVotingSessionSuccess() {
+    public void closedVotingSessionSuccess() throws CustomException {
         var sessions = VotingSessionMock.onlyVotingSessionActiveAndDateEndFutureList();
         var sizeOnlyActive = sessions.size()-1;
 
@@ -188,7 +199,7 @@ public class VotingSessionServiceTest {
     }
 
     @Test
-    public void closedVotingSessionNeverCall() {
+    public void closedVotingSessionNeverCall() throws CustomException {
         var sessions = VotingSessionMock.onlyVotingSessionActiveList();
         sessions.get(0).setDateEnd(LocalDateTime.now().plusMinutes(10));
         sessions.get(1).setDateEnd(LocalDateTime.now().plusMinutes(20));

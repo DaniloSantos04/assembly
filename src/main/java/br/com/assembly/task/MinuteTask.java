@@ -13,6 +13,10 @@ public class MinuteTask {
 
     @Scheduled(cron = "0 * * * * *")
     public void executeMinuteTask() {
-        votingSessionService.closedVotingSession();
+        try {
+            votingSessionService.closedVotingSession();
+        }catch (Exception e){
+            System.out.println("Erro execução Scheduled");
+        }
     }
 }
