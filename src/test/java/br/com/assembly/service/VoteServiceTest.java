@@ -4,6 +4,7 @@ import br.com.assembly.domain.entity.Vote;
 import br.com.assembly.domain.entity.VotingSession;
 import br.com.assembly.domain.repository.VoteRepository;
 import br.com.assembly.domain.repository.VotingSessionRepository;
+import br.com.assembly.exception.CustomException;
 import br.com.assembly.mock.VoteMock;
 import br.com.assembly.mock.VotingSessionMock;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,14 @@ public class VoteServiceTest {
     private VoteService voteService;
 
     @Test
-    public void firstRegisterVote() {
+    public void firstRegisterVote() throws CustomException {
         var votingSession = VotingSessionMock.buildFullVotingSession();
         var voteRequest = VoteMock.createdVoteRequest();
         var voteSaved = VoteMock.createdVote();
         var voteResponse = VoteMock.createdVoteResponse();
 
         when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
+
         when(voteRepository.findFirstByOrderByIdDesc()).thenReturn(null);
         when(voteRepository.save(any(Vote.class))).thenReturn(voteSaved);
 
@@ -54,7 +56,7 @@ public class VoteServiceTest {
     }
 
     @Test
-    public void othersRegisterVote() {
+    public void othersRegisterVote() throws CustomException {
         var votingSession = VotingSessionMock.buildFullVotingSession();
         var voteRequest = VoteMock.createdVoteRequest();
         var lastVote = VoteMock.createdVote();
@@ -81,14 +83,18 @@ public class VoteServiceTest {
     }
 
     @Test
-    public void registerVoteWithAgendaNull() {
-        var voteRequest = VoteMock.createdVoteRequest();
+    public void registerVoteWithAgendaNull() throws CustomException {
+        try{
+            var voteRequest = VoteMock.createdVoteRequest();
 
-        when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(null);
+            when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(null);
 
-        var response = voteService.registerVote(voteRequest);
+            var response = voteService.registerVote(voteRequest);
 
-        assertNull(response);
+        } catch (CustomException e) {
+            assertEquals("Voting session does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
 
         verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
         verify(voteRepository, never()).findFirstByOrderByIdDesc();
@@ -98,23 +104,27 @@ public class VoteServiceTest {
 
 
     @Test
-    public void registerVoteWithAgendaActiveFalse() {
-        var voteRequest = VoteMock.createdVoteRequest();
-        var votingSession = VotingSessionMock.buildFullVotingSession();
-        votingSession.setActive(false);
+    public void registerVoteWithAgendaActiveFalse() throws CustomException {
+        try{
+            var voteRequest = VoteMock.createdVoteRequest();
+            var votingSession = VotingSessionMock.buildFullVotingSession();
+            votingSession.setActive(false);
 
-        when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
+            when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
 
-        var response = voteService.registerVote(voteRequest);
+            var response = voteService.registerVote(voteRequest);
 
-        assertNotNull(response);
+        } catch (CustomException e) {
+            assertEquals("The voting session is not active for the provided id: 1", e.getMessage());
+            assertEquals(403, e.getHttpStatus());
+        }
         verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
         verify(voteRepository, never()).findFirstByOrderByIdDesc();
         verify(voteRepository, never()).save(any(Vote.class));
     }
 
     @Test
-    public void countVotesSuccess() {
+    public void countVotesSuccess() throws CustomException {
         var agendaId = 1L;
         var agenda = VotingSession.builder().build();
         var votes = VoteMock.createdVotes();
@@ -133,22 +143,26 @@ public class VoteServiceTest {
     }
 
     @Test
-    public void countVotesWhenAgendaNull() {
-        var agendaId = 1L;
-        var votes = VoteMock.createdVotes();
+    public void countVotesWhenAgendaNull() throws CustomException {
+        try{
+            var agendaId = 1L;
+            var votes = VoteMock.createdVotes();
 
-        when(votingSessionRepository.findByIdAgenda(agendaId)).thenReturn(null);
-        when(voteRepository.findByIdAgenda(agendaId)).thenReturn(votes);
+            when(votingSessionRepository.findByIdAgenda(agendaId)).thenReturn(null);
+            when(voteRepository.findByIdAgenda(agendaId)).thenReturn(votes);
 
-        var response = voteService.countVotes(agendaId);
+            var response = voteService.countVotes(agendaId);
 
-        assertNull(response);
+        } catch (CustomException e) {
+            assertEquals("Voting session does not exist for the id: 1", e.getMessage());
+            assertEquals(404, e.getHttpStatus());
+        }
         verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
         verify(voteRepository, never()).findByIdAgenda(anyLong());
     }
 
     @Test
-    public void countVotesWhenVotesEmpty() {
+    public void countVotesWhenVotesEmpty() throws CustomException {
         var agendaId = 1L;
         var agenda = VotingSession.builder().build();
 
@@ -157,7 +171,10 @@ public class VoteServiceTest {
 
         var response = voteService.countVotes(agendaId);
 
-        assertNull(response);
+        assertNotNull(response);
+        assertEquals(response.getIdAgenda(), agendaId);
+        assertEquals(response.getTotalVotesSim(), 0);
+        assertEquals(response.getTotalVotesNao(), 0);
         verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
         verify(voteRepository, times(1)).findByIdAgenda(anyLong());
     }
