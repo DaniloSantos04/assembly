@@ -17,3 +17,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+  redis:
+    image: redis
+    command: redis-server --requirepass guest
+    ports:
+      - 6379:6379

@@ -9,6 +9,7 @@ import br.com.assembly.web.dto.response.CountVotesResponse;
 import br.com.assembly.web.dto.response.VoteResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,6 +65,7 @@ public class VoteService {
         }
     }
 
+    @Cacheable("vote")
     public CountVotesResponse countVotes(Long id) throws CustomException {
         try {
             log.info("Starting the countVotes method. Parameters: id={}", id);

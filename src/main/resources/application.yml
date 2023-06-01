@@ -20,6 +20,11 @@ spring:
       routing-key: votingResult
     consumer:
       queue-name: votingResult
+  redis:
+    host: localhost
+    port: 6379
+    password: guest
+
 mongock:
   change-logs-scan-package:
     - br.com.assembly.dbchangelogs

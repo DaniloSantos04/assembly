@@ -9,6 +9,8 @@ import br.com.assembly.web.dto.response.VotingSessionResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -60,6 +62,7 @@ public class VotingSessionService {
         }
     }
 
+    @Cacheable("session")
     public VotingSessionResponse findVotingSessionById(Long id) throws CustomException {
         try{
             log.info("Starting the findVotingSessionById method. Parameters: id={}", id);
@@ -81,6 +84,7 @@ public class VotingSessionService {
         }
     }
 
+    @CachePut(value = "session", key = "#id")
     public VotingSessionResponse updateVotingSession(Long id, SessionUpdateRequest sessionUpdateRequest) throws CustomException {
         try{
             log.info("Starting the updateAgendaId method. Parameters: id={} and sessionUpdateRequest={}", id, sessionUpdateRequest);

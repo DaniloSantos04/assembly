@@ -8,6 +8,9 @@ import br.com.assembly.web.dto.request.agenda.AgendaUpdateRequest;
 import br.com.assembly.web.dto.response.AgendaResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +23,7 @@ public class AgendaService {
 
     private final AgendaRepository agendaRepository;
 
+    @CachePut(value = "agendas", key = "#agendaRequest.description")
     public AgendaResponse createAgenda(AgendaRequest agendaRequest) throws CustomException {
         log.info("Starting the createAgenda method. Parameters: agendaRequest={}", agendaRequest);
         try{
@@ -39,6 +43,7 @@ public class AgendaService {
         }
     }
 
+    @Cacheable("agendas")
     public List<AgendaResponse> findAll() throws CustomException {
         try{
             log.info("Starting the findAll method.");
@@ -52,6 +57,7 @@ public class AgendaService {
         }
     }
 
+    @CachePut(value = "agenda", key = "#id")
     public AgendaResponse updateAgendaId(Long id, AgendaUpdateRequest agendaUpdateRequest) throws CustomException {
         try{
             log.info("Starting the updateAgendaId method. Parameters: id={} and agendaUpdateRequest={}", id, agendaUpdateRequest);
@@ -79,6 +85,7 @@ public class AgendaService {
         }
     }
 
+    @CacheEvict(value = "agenda", key = "#id")
     public Boolean deleteByAgendaId(Long id) throws CustomException {
         try{
             log.info("Starting the deleteByAgendaId method. Parameters: id={}", id);
@@ -99,6 +106,7 @@ public class AgendaService {
         }
     }
 
+    @Cacheable("agenda")
     public AgendaResponse findAgendaId(Long id) throws CustomException {
         try{
 
