@@ -23,23 +23,25 @@ public class VoteService {
         try {
             log.info("Starting the registerVote method. Parameters: voteRequest={}", voteRequest);
 
-            log.info("Querying the voting session in the database for idAgenda={}", voteRequest.getIdAgenda());
-            var votingSession = votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda());
+            log.info("Querying the voting session in the database for idVotingSession={}", voteRequest.getIdVotingSession());
+            var votingSessionOptional = votingSessionRepository.findById(voteRequest.getIdVotingSession());
 
-            if (votingSession == null){
-                log.warn("Voting session does not exist for the id: {}", voteRequest.getIdAgenda());
-                throw new CustomException("Voting session does not exist for the id: ".concat(voteRequest.getIdAgenda().toString()), 404);
+            if (votingSessionOptional.isEmpty()){
+                log.warn("Voting session does not exist for the id: {}", voteRequest.getIdVotingSession());
+                throw new CustomException("Voting session does not exist for the id: ".concat(voteRequest.getIdVotingSession().toString()), 404);
             }
 
-            log.info("Querying vote in the database for the parameters: idAssociate={} and idAgenda={}", voteRequest.getIdAssociate(), voteRequest.getIdAgenda());
-            var associateAlreadyVoted = voteRepository.findByIdAssociateAndIdAgenda(voteRequest.getIdAssociate(), voteRequest.getIdAgenda());
+            var votingSession = votingSessionOptional.get();
+
+            log.info("Querying vote in the database for the parameters: idAssociate={} and idVotingSession={}", voteRequest.getIdAssociate(), voteRequest.getIdVotingSession());
+            var associateAlreadyVoted = voteRepository.findByIdAssociateAndIdVotingSession(voteRequest.getIdAssociate(), voteRequest.getIdVotingSession());
 
             if (associateAlreadyVoted != null){
                 log.warn("Associate has already voted.");
                 throw new CustomException("Associate has already voted.", 400);
             }
 
-            log.debug("Checking if voting session is active for idAgenda={}", voteRequest.getIdAgenda());
+            log.debug("Checking if voting session is active for idVotingSession={}", voteRequest.getIdVotingSession());
             if(votingSession.isActive()){
                 var lastVote = voteRepository.findFirstByOrderByIdDesc();
                 log.info("Database query returned lastVote={}", lastVote);
@@ -50,8 +52,8 @@ public class VoteService {
                 var voteSaved = voteRepository.save(vote);
                 return voteSaved.fromResponse();
             }
-            log.warn("The voting session is not active for the provided id: {}", voteRequest.getIdAgenda());
-            throw new CustomException("The voting session is not active for the provided id: ".concat(voteRequest.getIdAgenda().toString()), 403);
+            log.warn("The voting session is not active for the provided id: {}", voteRequest.getIdVotingSession());
+            throw new CustomException("The voting session is not active for the provided id: ".concat(voteRequest.getIdVotingSession().toString()), 403);
 
         } catch (CustomException e) {
             log.error("A CustomException occurred: {}", e.getMessage());
@@ -66,15 +68,17 @@ public class VoteService {
         try {
             log.info("Starting the countVotes method. Parameters: id={}", id);
             log.info("Querying the voting session in the database for idAgenda={}", id);
-            var votingSession = votingSessionRepository.findByIdAgenda(id);
+            var votingSessionOptional= votingSessionRepository.findById(id);
 
-            if (votingSession == null)
+            if (votingSessionOptional.isEmpty())
                 throw new CustomException("Voting session does not exist for the id: ".concat(id.toString()), 404);
+
+            var votingSession = votingSessionOptional.get();
 
             if (votingSession.isActive())
                 throw new CustomException("Voting session is active for the id: " + id.toString(), 409);
 
-            var votes = voteRepository.findByIdAgenda(id);
+            var votes = voteRepository.findByIdVotingSession(id);
 
             log.info("Database query returned {} votes for id={}", votes.size(), id);
 
@@ -87,7 +91,8 @@ public class VoteService {
                     .count();
 
             return CountVotesResponse.builder()
-                    .idAgenda(id)
+                    .idVotingSession(id)
+                    .idAgenda(votingSession.getIdAgenda())
                     .totalVotesSim(TotalVotesSim)
                     .totalVotesNao(TotalVotesNao)
                     .build();

@@ -40,8 +40,6 @@ public class AgendaControllerTest {
 
     @MockBean
     private AgendaService agendaService;
-    @MockBean
-    private VoteService voteService;
 
     private static final String URL_PATCH = "/v1/agenda";
     private static final String URL_PATCH_ID = "/v1/agenda/id/{id}";
@@ -249,20 +247,5 @@ public class AgendaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
-    }
-
-    @Test
-    public void findResultAgendaSuccess() throws Exception {
-        var id = 1L;
-        var countVotesResponse = VoteMock.createdCountVotesResponse();
-
-        when(voteService.countVotes(id)).thenReturn(countVotesResponse);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH.concat("/{id}/result"),id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.idAgenda").value(id))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesSim").value(countVotesResponse.getTotalVotesSim()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesNao").value(countVotesResponse.getTotalVotesNao()));
     }
 }

@@ -1,5 +1,6 @@
 package br.com.assembly.web.dto.response;
 
+import br.com.assembly.enums.VoteEnum;
 import lombok.*;
 
 @Getter
@@ -11,6 +12,6 @@ public class VoteResponse {
 
     private Long id;
     private Long idAssociate;
-    private Long idAgenda;
-    private boolean vote;
+    private Long idVotingSession;
+    private VoteEnum vote;
 }

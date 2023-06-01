@@ -8,10 +8,12 @@ import br.com.assembly.web.dto.request.votingsession.VotingSessionRequest;
 import br.com.assembly.web.dto.response.VotingSessionResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,9 +25,15 @@ public class VotingSessionService {
 
     private final VotingSessionRepository votingSessionRepository;
 
+    @Autowired
+    private AgendaService agendaService;
+
     public VotingSessionResponse createdVotingSession(VotingSessionRequest votingSessionRequest) throws CustomException {
         try{
             log.info("Starting the createdVotingSession method. Parameters: votingSessionRequest={}", votingSessionRequest);
+
+            agendaService.findAgendaId(votingSessionRequest.getIdAgenda());
+
             var lastVotingSession = votingSessionRepository.findFirstByOrderByIdDesc();
             log.info("Database query returned lastVotingSession={}", lastVotingSession);
             var maxId = lastVotingSession != null ? lastVotingSession.getId()+1 : 1;
@@ -38,8 +46,14 @@ public class VotingSessionService {
 
             log.info("Saving voting session in database with parameters={}", votingSession);
             var createdVotingSession = votingSessionRepository.save(votingSession);
+
+            if(votingSessionRequest.getDateEnd() != null) closedVotingSession();
+
             return createdVotingSession.fromResponse();
 
+        } catch (CustomException e) {
+            log.error("A CustomException occurred: {}", e.getMessage());
+            throw new CustomException(e.getMessage(), e.getHttpStatus());
         } catch (Exception e) {
             log.error("An unexpected error occurred: {}, cause: {}", e.getMessage(), e.getCause());
             throw new CustomException("We encountered an unexpected error.", 500);
@@ -79,6 +93,7 @@ public class VotingSessionService {
 
             log.info("Saving voting session in database with parameters={}", previousSession);
             var createdVotingSession = votingSessionRepository.save(VotingSession.fromEntenty(previousSession));
+            if(sessionUpdateRequest.getDateEnd() != null) closedVotingSession();
             return createdVotingSession.fromResponse();
         } catch (CustomException e) {
             log.error("A CustomException occurred: {}", e.getMessage());
@@ -89,7 +104,7 @@ public class VotingSessionService {
         }
     }
 
-    public void closedVotingSession() throws CustomException {
+    public List<VotingSessionResponse> closedVotingSession() throws CustomException {
         try{
             log.info("Starting the closedVotingSession method.");
             var dateNow = LocalDateTime.now();
@@ -105,8 +120,13 @@ public class VotingSessionService {
 
             sessionsToClosed.forEach(session -> session.setActive(false));
 
-            log.info("Saving {} session to database", sessionsToClosed.size());
-            votingSessionRepository.saveAll(sessionsToClosed);
+            log.info("Saving {} session closed to database", sessionsToClosed.size());
+            var results = votingSessionRepository.saveAll(sessionsToClosed);
+
+            return results.stream()
+                    .map(VotingSession::fromResponse)
+                    .collect(Collectors.toList());
+
         } catch (Exception e) {
             log.error("An unexpected error occurred: {}, cause: {}", e.getMessage(), e.getCause());
             throw new CustomException("We encountered an unexpected error.", 500);

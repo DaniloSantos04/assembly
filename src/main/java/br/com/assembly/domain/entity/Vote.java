@@ -1,5 +1,6 @@
 package br.com.assembly.domain.entity;
 
+import br.com.assembly.enums.VoteEnum;
 import br.com.assembly.web.dto.request.vote.VoteRequest;
 import br.com.assembly.web.dto.response.VoteResponse;
 import lombok.Builder;
@@ -17,14 +18,14 @@ public class Vote {
     @Id
     private Long id;
     private Long idAssociate;
-    private Long idAgenda;
+    private Long idVotingSession;
     private boolean vote;
 
     public static Vote fromEntenty(VoteRequest dto){
         return Vote.builder()
                 .idAssociate(dto.getIdAssociate())
-                .idAgenda(dto.getIdAgenda())
-                .vote(dto.isVote())
+                .idVotingSession(dto.getIdVotingSession())
+                .vote(dto.getVote().toBoolean())
                 .build();
     }
 
@@ -32,8 +33,8 @@ public class Vote {
         return VoteResponse.builder()
                 .id(this.id)
                 .idAssociate(this.idAssociate)
-                .idAgenda(this.idAgenda)
-                .vote(this.vote)
+                .idVotingSession(this.idVotingSession)
+                .vote(VoteEnum.fromBoolean(this.vote))
                 .build();
     }
 }
