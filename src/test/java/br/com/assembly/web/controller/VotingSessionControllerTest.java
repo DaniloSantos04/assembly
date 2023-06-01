@@ -1,6 +1,8 @@
 package br.com.assembly.web.controller;
 
+import br.com.assembly.mock.VoteMock;
 import br.com.assembly.mock.VotingSessionMock;
+import br.com.assembly.service.VoteService;
 import br.com.assembly.service.VotingSessionService;
 import br.com.assembly.web.dto.request.votingsession.SessionUpdateRequest;
 import br.com.assembly.web.dto.request.votingsession.VotingSessionRequest;
@@ -30,6 +32,9 @@ public class VotingSessionControllerTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
+
+    @MockBean
+    private VoteService voteService;
 
     @MockBean
     private VotingSessionService votingSessionService;
@@ -100,6 +105,21 @@ public class VotingSessionControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.active").value(sessionUpdateRequest.getActive()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.dateStart").value(sessionUpdateRequest.getDateStart().withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.dateEnd").value(sessionUpdateRequest.getDateEnd().withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+    }
+
+    @Test
+    public void findResultAgendaSuccess() throws Exception {
+        var id = 1L;
+        var countVotesResponse = VoteMock.createdCountVotesResponse();
+
+        when(voteService.countVotes(id)).thenReturn(countVotesResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders.get(URL_PATCH.concat("/{id}/result"),id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.idVotingSession").value(id))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesSim").value(countVotesResponse.getTotalVotesSim()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalVotesNao").value(countVotesResponse.getTotalVotesNao()));
     }
 
 }

@@ -24,9 +24,6 @@ public class AgendaController {
     @Autowired
     private AgendaService agendaService;
 
-    @Autowired
-    private VoteService voteService;
-
     @PostMapping()
     public ResponseEntity<?> createAgenda(@RequestBody @NotNull @Valid AgendaRequest agendaRequest) throws CustomException {
         var createdAgenda = agendaService.createAgenda(agendaRequest);
@@ -67,11 +64,5 @@ public class AgendaController {
         }
         log.info("Agenda not found.");
         return ResponseEntity.badRequest().build();
-    }
-
-    @GetMapping("/{id}/result")
-    public ResponseEntity<?> findResultAgenda(@PathVariable("id") Long id) throws CustomException {
-        var response = voteService.countVotes(id);
-        return ResponseEntity.ok(response);
     }
 }

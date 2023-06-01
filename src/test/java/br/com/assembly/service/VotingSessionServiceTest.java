@@ -3,6 +3,7 @@ package br.com.assembly.service;
 import br.com.assembly.domain.entity.VotingSession;
 import br.com.assembly.domain.repository.VotingSessionRepository;
 import br.com.assembly.exception.CustomException;
+import br.com.assembly.mock.AgendaMock;
 import br.com.assembly.mock.VotingSessionMock;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,7 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -24,6 +26,9 @@ public class VotingSessionServiceTest {
 
     @Mock
     private VotingSessionRepository votingSessionRepository;
+
+    @Mock
+    private AgendaService agendaService;
 
     @InjectMocks
     private VotingSessionService votingSessionService;
@@ -39,6 +44,11 @@ public class VotingSessionServiceTest {
         votingSessionResponse.setDateEnd(LocalDateTime.now().plusMinutes(1));
 
         var votingSession = VotingSessionMock.buildFullVotingSession();
+
+        var agendaResponse = AgendaMock.allAgendaResponseRequestedFieldsComplete();
+
+
+        when(agendaService.findAgendaId(anyLong())).thenReturn(agendaResponse);
 
         when(votingSessionRepository.findFirstByOrderByIdDesc()).thenReturn(null);
 

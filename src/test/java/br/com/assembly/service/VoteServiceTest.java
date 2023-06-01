@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,7 +38,7 @@ public class VoteServiceTest {
         var voteSaved = VoteMock.createdVote();
         var voteResponse = VoteMock.createdVoteResponse();
 
-        when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
+        when(votingSessionRepository.findById(voteRequest.getIdVotingSession())).thenReturn(Optional.of(votingSession));
 
         when(voteRepository.findFirstByOrderByIdDesc()).thenReturn(null);
         when(voteRepository.save(any(Vote.class))).thenReturn(voteSaved);
@@ -47,10 +48,10 @@ public class VoteServiceTest {
         assertNotNull(response);
         assertEquals(response.getId(), voteResponse.getId());
         assertEquals(response.getIdAssociate(), voteResponse.getIdAssociate());
-        assertEquals(response.getIdAgenda(), voteResponse.getIdAgenda());
-        assertEquals(response.isVote(), voteResponse.isVote());
+        assertEquals(response.getIdVotingSession(), voteResponse.getIdVotingSession());
+        assertEquals(response.getVote(), voteResponse.getVote());
 
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
+        verify(votingSessionRepository, times(1)).findById(eq(voteRequest.getIdVotingSession()));
         verify(voteRepository, times(1)).findFirstByOrderByIdDesc();
         verify(voteRepository, times(1)).save(any(Vote.class));
     }
@@ -65,7 +66,7 @@ public class VoteServiceTest {
         var voteResponse = VoteMock.createdVoteResponse();
         voteResponse.setId(lastVote.getId()+1);
 
-        when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
+        when(votingSessionRepository.findById(voteRequest.getIdVotingSession())).thenReturn(Optional.of(votingSession));
         when(voteRepository.findFirstByOrderByIdDesc()).thenReturn(lastVote);
         when(voteRepository.save(any(Vote.class))).thenReturn(voteSaved);
 
@@ -74,20 +75,21 @@ public class VoteServiceTest {
         assertNotNull(response);
         assertEquals(response.getId(), voteResponse.getId());
         assertEquals(response.getIdAssociate(), voteResponse.getIdAssociate());
-        assertEquals(response.getIdAgenda(), voteResponse.getIdAgenda());
-        assertEquals(response.isVote(), voteResponse.isVote());
+        assertEquals(response.getIdVotingSession(), voteResponse.getIdVotingSession());
+        assertEquals(response.getVote(), voteResponse.getVote());
 
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
+        verify(votingSessionRepository, times(1)).findById(eq(voteRequest.getIdVotingSession()));
         verify(voteRepository, times(1)).findFirstByOrderByIdDesc();
         verify(voteRepository, times(1)).save(any(Vote.class));
     }
 
     @Test
     public void registerVoteWithAgendaNull() throws CustomException {
-        try{
-            var voteRequest = VoteMock.createdVoteRequest();
+        var voteRequest = VoteMock.createdVoteRequest();
 
-            when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(null);
+        try{
+
+            when(votingSessionRepository.findById(voteRequest.getIdVotingSession())).thenReturn(Optional.empty());
 
             var response = voteService.registerVote(voteRequest);
 
@@ -96,7 +98,7 @@ public class VoteServiceTest {
             assertEquals(404, e.getHttpStatus());
         }
 
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
+        verify(votingSessionRepository, times(1)).findById(eq(voteRequest.getIdVotingSession()));
         verify(voteRepository, never()).findFirstByOrderByIdDesc();
         verify(voteRepository, never()).save(any(Vote.class));
     }
@@ -105,12 +107,13 @@ public class VoteServiceTest {
 
     @Test
     public void registerVoteWithAgendaActiveFalse() throws CustomException {
+        var voteRequest = VoteMock.createdVoteRequest();
         try{
-            var voteRequest = VoteMock.createdVoteRequest();
+
             var votingSession = VotingSessionMock.buildFullVotingSession();
             votingSession.setActive(false);
 
-            when(votingSessionRepository.findByIdAgenda(voteRequest.getIdAgenda())).thenReturn(votingSession);
+            when(votingSessionRepository.findById(voteRequest.getIdVotingSession())).thenReturn(Optional.of(votingSession));
 
             var response = voteService.registerVote(voteRequest);
 
@@ -118,64 +121,68 @@ public class VoteServiceTest {
             assertEquals("The voting session is not active for the provided id: 1", e.getMessage());
             assertEquals(403, e.getHttpStatus());
         }
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
+        verify(votingSessionRepository, times(1)).findById(eq(voteRequest.getIdVotingSession()));
         verify(voteRepository, never()).findFirstByOrderByIdDesc();
         verify(voteRepository, never()).save(any(Vote.class));
     }
 
     @Test
     public void countVotesSuccess() throws CustomException {
-        var agendaId = 1L;
-        var agenda = VotingSession.builder().build();
+        var id = 1L;
+        var votingSession = VotingSession.builder().build();
         var votes = VoteMock.createdVotes();
 
-        when(votingSessionRepository.findByIdAgenda(agendaId)).thenReturn(agenda);
-        when(voteRepository.findByIdAgenda(agendaId)).thenReturn(votes);
+        when(votingSessionRepository.findById(id)).thenReturn(Optional.of(votingSession));
+        when(voteRepository.findByIdVotingSession(id)).thenReturn(votes);
 
-        var response = voteService.countVotes(agendaId);
+        var response = voteService.countVotes(id);
 
         assertNotNull(response);
-        assertEquals(response.getIdAgenda(), agendaId);
+        assertEquals(response.getIdVotingSession(), id);
         assertEquals(response.getTotalVotesSim(), 2);
         assertEquals(response.getTotalVotesNao(), 1);
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
-        verify(voteRepository, times(1)).findByIdAgenda(anyLong());
+
+        verify(votingSessionRepository, times(1)).findById(eq(id));
+        verify(voteRepository, times(1)).findByIdVotingSession(anyLong());
     }
 
     @Test
-    public void countVotesWhenAgendaNull() throws CustomException {
+    public void countVotesWhenVotingSessionIsNull() throws CustomException {
+        var id = 1L;
         try{
-            var agendaId = 1L;
+
             var votes = VoteMock.createdVotes();
 
-            when(votingSessionRepository.findByIdAgenda(agendaId)).thenReturn(null);
-            when(voteRepository.findByIdAgenda(agendaId)).thenReturn(votes);
+            when(votingSessionRepository.findById(id)).thenReturn(Optional.empty());
+            when(voteRepository.findByIdVotingSession(id)).thenReturn(votes);
 
-            var response = voteService.countVotes(agendaId);
+            var response = voteService.countVotes(id);
 
         } catch (CustomException e) {
             assertEquals("Voting session does not exist for the id: 1", e.getMessage());
             assertEquals(404, e.getHttpStatus());
         }
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
-        verify(voteRepository, never()).findByIdAgenda(anyLong());
+
+        verify(votingSessionRepository, times(1)).findById(eq(id));
+        verify(voteRepository, never()).findByIdVotingSession(anyLong());
     }
 
     @Test
     public void countVotesWhenVotesEmpty() throws CustomException {
-        var agendaId = 1L;
-        var agenda = VotingSession.builder().build();
+        var id = 1L;
+        var votingSession = VotingSession.builder().build();
 
-        when(votingSessionRepository.findByIdAgenda(agendaId)).thenReturn(agenda);
-        when(voteRepository.findByIdAgenda(agendaId)).thenReturn(Collections.emptyList());
+        when(votingSessionRepository.findById(id)).thenReturn(Optional.of(votingSession));
+        when(voteRepository.findByIdVotingSession(id)).thenReturn(Collections.emptyList());
 
-        var response = voteService.countVotes(agendaId);
+        var response = voteService.countVotes(id);
 
         assertNotNull(response);
-        assertEquals(response.getIdAgenda(), agendaId);
+        assertEquals(response.getIdVotingSession(), id);
         assertEquals(response.getTotalVotesSim(), 0);
         assertEquals(response.getTotalVotesNao(), 0);
-        verify(votingSessionRepository, times(1)).findByIdAgenda(anyLong());
-        verify(voteRepository, times(1)).findByIdAgenda(anyLong());
+
+        verify(votingSessionRepository, times(1)).findById(eq(id));
+        verify(voteRepository, times(1)).findByIdVotingSession(anyLong());
     }
 }
